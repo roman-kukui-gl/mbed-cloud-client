@@ -312,14 +312,12 @@ palStatus_t pal_plat_osThreadCreate(palThreadFuncPtr function, void* funcArgumen
     //      in this specific port of (8.1.2) the "StackType_t" is defined to 4-bytes this is why we divide the "stackSize" parameter by "sizeof(uint32_t)".
     //      inside freeRTOS code, the stack size is calculated according to the following formula: "((size_t)usStackDepth) * sizeof(StackType_t)"
     //       where "usStackDepth" is equal to "stackSize / sizeof(uint32_t)"
-    BaseType_t result = xTaskGenericCreate((TaskFunction_t)threadFunction,
+    BaseType_t result = xTaskCreate((TaskFunction_t)threadFunction,
         "palTask",
         (stackSize / sizeof(uint32_t)),
         threadData,
         (int16_t)priority,
-        &sysThreadID,
-        NULL, //if stack pointer is NULL then allocate the stack according to stack size
-        NULL);
+        &sysThreadID);
 
     PAL_THREADS_MUTEX_LOCK(status);
     if (PAL_SUCCESS != status)
