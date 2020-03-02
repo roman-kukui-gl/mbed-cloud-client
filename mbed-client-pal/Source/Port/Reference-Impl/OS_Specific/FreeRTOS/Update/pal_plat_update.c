@@ -21,7 +21,7 @@
 #include "fsl_debug_console.h"
 #include "board.h"
 #include "clock_config.h"
-#include "fsl_flash.h"
+#include "r_flash_rx_if.h"          // #include "fsl_flash.h"
 
 #define TRACE_GROUP "PAL"
 
@@ -39,7 +39,7 @@
 PAL_PRIVATE FirmwareHeader_t g_palFirmwareHeader;
 PAL_PRIVATE bool g_headerWasWritten = false;
 
-PAL_PRIVATE flash_config_t g_flashDriver;
+// PAL_PRIVATE flash_config_t g_flashDriver;
 
 
 /*
@@ -148,24 +148,28 @@ palStatus_t pal_plat_imageSetHeader(palImageId_t imageId,palImageHeaderDeails_t 
 
 palStatus_t pal_plat_imageReserveSpace(palImageId_t imageId, size_t imageSize)
 {
-    status_t result = PAL_SUCCESS;
-    memset(&g_flashDriver, 0, sizeof(g_flashDriver));
-    result = FLASH_Init(&g_flashDriver);
-    if (kStatus_FLASH_Success != result)
+    palStatus_t result = PAL_SUCCESS;
+    /// \todo
+    // memset(&g_flashDriver, 0, sizeof(g_flashDriver));
+    // result = FLASH_Init(&g_flashDriver);
+
+    if (FLASH_SUCCESS != result)
     {
         g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);
         return PAL_ERR_UPDATE_ERROR;
     }
 
-    result = FLASH_Erase(&g_flashDriver, PAL_UPDATE_JOURNAL_START_OFFSET, imageSize, kFLASH_apiEraseKey);
-    if (kStatus_FLASH_Success != result)
+    result = FLASH_Erase(PAL_UPDATE_JOURNAL_START_OFFSET, imageSize);
+    if (FLASH_SUCCESS != result)
     {
         g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);
         return PAL_ERR_UPDATE_ERROR;
     }
 
-    result = FLASH_VerifyErase(&g_flashDriver, PAL_UPDATE_JOURNAL_START_OFFSET, imageSize, kFLASH_marginValueUser);
-    if (kStatus_FLASH_Success != result)
+    flash_res_t blank_test_result;          // erase result
+
+    result = FLASH_VerifyErase(PAL_UPDATE_JOURNAL_START_OFFSET, imageSize, &blank_test_result);
+    if (FLASH_RES_BLANK != blank_test_result)
     {
         g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);
         return PAL_ERR_UPDATE_ERROR;
@@ -189,51 +193,50 @@ palStatus_t pal_plat_imageReserveSpace(palImageId_t imageId, size_t imageSize)
 
 palStatus_t pal_plat_imageWrite(palImageId_t imageId, size_t offset, palConstBuffer_t *chunk)
 {
-    status_t result = PAL_SUCCESS;
+    palStatus_t result = PAL_SUCCESS;
     uint32_t failAddr, failDat;
     //if header was not written - write header
     if (!g_headerWasWritten)
     {
-        result = FLASH_Program(
-            &g_flashDriver,
-            PAL_UPDATE_JOURNAL_START_OFFSET,
+        result = R_FLASH_Write(
             (uint32_t *)(&g_palFirmwareHeader),
+            PAL_UPDATE_JOURNAL_START_OFFSET,
             sizeof(g_palFirmwareHeader)
             );
-		if (kStatus_FLASH_Success != result)
+		if (FLASH_SUCCESS != result)
 		{
 		    g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);
 		    return PAL_ERR_UPDATE_ERROR;
 		}
 		g_headerWasWritten = true;
     }
-    result = FLASH_Program(
-        &g_flashDriver,
-        (PAL_UPDATE_JOURNAL_START_OFFSET + sizeof(g_palFirmwareHeader) + offset),
+    result = R_FLASH_Write(
         (uint32_t *)(chunk->buffer),
+        (PAL_UPDATE_JOURNAL_START_OFFSET + sizeof(g_palFirmwareHeader) + offset),
         chunk->bufferLength
         );
-    if (kStatus_FLASH_Success != result)
+    if (FLASH_SUCCESS != result)
     {
         g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);
         return PAL_ERR_UPDATE_ERROR;
     }
 
     /* Program Check user margin levels */
-    result = FLASH_VerifyProgram(
-        &g_flashDriver,
-        (PAL_UPDATE_JOURNAL_START_OFFSET + sizeof(g_palFirmwareHeader) + offset),
-        chunk->bufferLength,
-        (const uint32_t *)(chunk->buffer),
-        kFLASH_marginValueUser,
-        &failAddr,
-        &failDat
-        );
-    if (kStatus_FLASH_Success != result)
-    {
-        g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);
-        return PAL_ERR_UPDATE_ERROR;
-    }
+    /// \todo realize verification
+    // result = FLASH_VerifyProgram(
+    //     &g_flashDriver,
+    //     (PAL_UPDATE_JOURNAL_START_OFFSET + sizeof(g_palFirmwareHeader) + offset),
+    //     chunk->bufferLength,
+    //     (const uint32_t *)(chunk->buffer),
+    //     kFLASH_marginValueUser,
+    //     &failAddr,
+    //     &failDat
+    //     );
+    // if (FLASH_SUCCESS != result)
+    // {
+    //     g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);
+    //     return PAL_ERR_UPDATE_ERROR;
+    // }
     g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_WRITE);
     return PAL_SUCCESS;
 }

@@ -16,18 +16,20 @@
 
 #include "pal.h"
 #include "pal_plat_internalFlash.h"
-#include "fsl_flash.h"
+#include "r_flash_rx_if.h"// #include "fsl_flash.h"
 
 ////////////////////////////PRIVATE///////////////////////////////////
-PAL_PRIVATE flash_config_t g_flashDescriptor = {0};
+// PAL_PRIVATE flash_config_t g_flashDescriptor = {0};
 ////////////////////////////END PRIVATE////////////////////////////////
 
 palStatus_t pal_plat_internalFlashInit(void)
 {
-    status_t status;
+    flash_err_t status;
     palStatus_t ret = PAL_SUCCESS;
-    status = FLASH_Init(&g_flashDescriptor);
-    if(kStatus_FLASH_Success != status)
+
+    //  Initialize the flash peripheral.
+    status = R_FLASH_Open();
+    if(FLASH_SUCCESS != status)
     {
         ret = PAL_ERR_INTERNAL_FLASH_INIT_ERROR;
     }
@@ -37,7 +39,12 @@ palStatus_t pal_plat_internalFlashInit(void)
 
 palStatus_t pal_plat_internalFlashDeInit(void)
 {
-    memset(&g_flashDescriptor, 0, sizeof(g_flashDescriptor));
+    // memset(&g_flashDescriptor, 0, sizeof(g_flashDescriptor));
+    /// \todo Clean memory before deinit
+
+    // closes the flash driver.
+    R_FLASH_Close();
+
 	return PAL_SUCCESS;
 }
 
@@ -45,19 +52,23 @@ palStatus_t pal_plat_internalFlashDeInit(void)
 palStatus_t pal_plat_internalFlashWrite(const size_t size, const uint32_t address, const uint32_t * buffer)
 {
     palStatus_t ret = PAL_SUCCESS;
-    status_t status = kStatus_Success;
+    flash_err_t status = FLASH_SUCCESS;
 
 	/* We need to prevent flash accesses during program operation */
 	__disable_irq();
-	status = FLASH_Program(&g_flashDescriptor, address, (uint32_t *)buffer, size);
-	if (kStatus_Success == status)
+
+    // flash_err_t R_FLASH_Write(uint32_t src_address, uint32_t dest_address, uint32_t num_bytes);
+	status = R_FLASH_Write(buffer, address, size);
+	if (FLASH_SUCCESS == status)
 	{
-		// Must use kFlashMargin_User, or kFlashMargin_Factory for verify program
-		status = FLASH_VerifyProgram(&g_flashDescriptor, address, size, (uint32_t *)buffer, kFLASH_marginValueUser, NULL, NULL);
-		if(kStatus_Success != status)
-		{
-			ret = PAL_ERR_INTERNAL_FLASH_WRITE_ERROR;
-		}
+        /// \todo Implement flash verification after write operation.
+
+		// // Must use kFlashMargin_User, or kFlashMargin_Factory for verify program
+		// status = FLASH_VerifyProgram(&g_flashDescriptor, address, size, (uint32_t *)buffer, kFLASH_marginValueUser, NULL, NULL);
+		// if(FLASH_SUCCESS != status)
+		// {
+		// 	ret = PAL_ERR_INTERNAL_FLASH_WRITE_ERROR;
+		// }
 	}
 	__enable_irq();
 
@@ -66,7 +77,9 @@ palStatus_t pal_plat_internalFlashWrite(const size_t size, const uint32_t addres
 
 palStatus_t pal_plat_internalFlashRead(const size_t size, const uint32_t address, uint32_t * buffer)
 {
-    memcpy(buffer, (const void *)address, size);
+    /// \todo Fix exception, set proper flash areas
+
+    // memcpy(buffer, (const void *)address, size);
     return PAL_SUCCESS;
 }
 
@@ -74,34 +87,42 @@ palStatus_t pal_plat_internalFlashRead(const size_t size, const uint32_t address
 palStatus_t pal_plat_internalFlashErase(uint32_t address, size_t size)
 {
     palStatus_t ret = PAL_SUCCESS;
-    int16_t  status = kStatus_Success;
+    flash_err_t  status = FLASH_SUCCESS;
 
     __disable_irq();
-    status = FLASH_Erase(&g_flashDescriptor, address, pal_plat_internalFlashGetSectorSize(address), kFLASH_apiEraseKey);
-    if (kStatus_Success == status)
+
+    flash_res_t blank_test_result;
+    status = R_FLASH_Erase(address, pal_plat_internalFlashGetSectorSize(address));
+ 
+    if (FLASH_SUCCESS == status)
     {
-        status = FLASH_VerifyErase(&g_flashDescriptor, address, pal_plat_internalFlashGetSectorSize(address), kFLASH_marginValueNormal);
+        status = R_FLASH_BlankCheck(address, pal_plat_internalFlashGetSectorSize(address), &blank_test_result);
     }
 
-    if (kStatus_Success != status)
+    if (FLASH_RES_BLANK != blank_test_result)
     {
         ret = PAL_ERR_INTERNAL_FLASH_ERASE_ERROR;
     }
     __enable_irq();
+
     return ret;
 }
 
 
 size_t pal_plat_internalFlashGetPageSize(void)
 {
-	return FSL_FEATURE_FLASH_PFLASH_BLOCK_WRITE_UNIT_SIZE;
+    /// \todo Replace by proper value
+
+	// return FSL_FEATURE_FLASH_PFLASH_BLOCK_WRITE_UNIT_SIZE;
+    return 1024;
 }
 
 
 size_t pal_plat_internalFlashGetSectorSize(uint32_t address)
 {
-    size_t devicesize = 0;
-    FLASH_GetProperty(&g_flashDescriptor, kFLASH_propertyPflashSectorSize, (uint32_t*)&devicesize);
+    /// \todo Fix for providing sector size
+    size_t devicesize = 1024;
+    
     return devicesize;
 }
 

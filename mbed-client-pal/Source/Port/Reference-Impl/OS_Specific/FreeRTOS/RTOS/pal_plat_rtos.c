@@ -103,18 +103,21 @@ PAL_PRIVATE void threadFree(palThreadData_t** threadData);
 
 PAL_PRIVATE PAL_INLINE uint32_t pal_plat_GetIPSR(void)
 {
-	uint32_t result;
+// 	uint32_t result;
 
-#if defined (__CC_ARM)
-	__asm volatile
-	{
-		MRS result, ipsr
-	}
-#elif defined (__GNUC__)
-	__asm volatile ("MRS %0, ipsr" : "=r" (result) );
-#endif
+// #if defined (__CC_ARM)
+// 	__asm volatile
+// 	{
+// 		MRS result, ipsr
+// 	}
+// #elif defined (__GNUC__)
+// 	__asm volatile ("MRS %0, ipsr" : "=r" (result) );
+// #endif
 
-	return(result);
+// 	return(result);
+
+	/// \todo Replace with proper interrupt status checking.
+	return 0;		// in thread mode
 }
 
 palStatus_t pal_plat_RTOSInitialize(void* opaqueContext)
