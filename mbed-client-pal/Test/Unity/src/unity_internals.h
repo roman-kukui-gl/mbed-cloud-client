@@ -8,7 +8,7 @@
 #define UNITY_INTERNALS_H
 
 #ifdef UNITY_INCLUDE_CONFIG_H
-//#include "unity_config.h"
+#include "unity_config.h"
 #endif
 
 #include <setjmp.h>
@@ -294,7 +294,8 @@ typedef UNITY_DOUBLE_TYPE _UD;
 #else
   /* If defined as something else, make sure we declare it here so it's ready for use */
   #ifndef UNITY_OMIT_OUTPUT_CHAR_HEADER_DECLARATION
-extern void UNITY_OUTPUT_CHAR(int);
+/// \todo Redefine in serial debug print interface.
+// extern void UNITY_OUTPUT_CHAR(int);
   #endif
 #endif
 
