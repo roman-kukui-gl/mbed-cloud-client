@@ -17,10 +17,10 @@
 #include "pal.h"
 #include "pal_plat_update.h"
 
-#include "fsl_device_registers.h"
-#include "fsl_debug_console.h"
-#include "board.h"
-#include "clock_config.h"
+// #include "fsl_device_registers.h"
+// #include "fsl_debug_console.h"
+// #include "board.h"
+// #include "clock_config.h"
 #include "r_flash_rx_if.h"          // #include "fsl_flash.h"
 
 #define TRACE_GROUP "PAL"
@@ -159,7 +159,7 @@ palStatus_t pal_plat_imageReserveSpace(palImageId_t imageId, size_t imageSize)
         return PAL_ERR_UPDATE_ERROR;
     }
 
-    result = FLASH_Erase(PAL_UPDATE_JOURNAL_START_OFFSET, imageSize);
+    result = R_FLASH_Erase(PAL_UPDATE_JOURNAL_START_OFFSET, imageSize);
     if (FLASH_SUCCESS != result)
     {
         g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);
@@ -167,8 +167,8 @@ palStatus_t pal_plat_imageReserveSpace(palImageId_t imageId, size_t imageSize)
     }
 
     flash_res_t blank_test_result;          // erase result
-
-    result = FLASH_VerifyErase(PAL_UPDATE_JOURNAL_START_OFFSET, imageSize, &blank_test_result);
+    
+    result = R_FLASH_BlankCheck(PAL_UPDATE_JOURNAL_START_OFFSET, imageSize, &blank_test_result);
     if (FLASH_RES_BLANK != blank_test_result)
     {
         g_palUpdateServiceCBfunc(PAL_IMAGE_EVENT_ERROR);

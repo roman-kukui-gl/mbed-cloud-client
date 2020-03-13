@@ -55,7 +55,7 @@ palStatus_t pal_plat_internalFlashWrite(const size_t size, const uint32_t addres
     flash_err_t status = FLASH_SUCCESS;
 
 	/* We need to prevent flash accesses during program operation */
-	__disable_irq();
+	portDISABLE_INTERRUPTS();
 
     // flash_err_t R_FLASH_Write(uint32_t src_address, uint32_t dest_address, uint32_t num_bytes);
 	status = R_FLASH_Write(buffer, address, size);
@@ -70,7 +70,7 @@ palStatus_t pal_plat_internalFlashWrite(const size_t size, const uint32_t addres
 		// 	ret = PAL_ERR_INTERNAL_FLASH_WRITE_ERROR;
 		// }
 	}
-	__enable_irq();
+	portENABLE_INTERRUPTS();
 
     return ret;
 }
@@ -89,7 +89,7 @@ palStatus_t pal_plat_internalFlashErase(uint32_t address, size_t size)
     palStatus_t ret = PAL_SUCCESS;
     flash_err_t  status = FLASH_SUCCESS;
 
-    __disable_irq();
+    portDISABLE_INTERRUPTS();
 
     flash_res_t blank_test_result;
     status = R_FLASH_Erase(address, pal_plat_internalFlashGetSectorSize(address));
@@ -103,7 +103,7 @@ palStatus_t pal_plat_internalFlashErase(uint32_t address, size_t size)
     {
         ret = PAL_ERR_INTERNAL_FLASH_ERASE_ERROR;
     }
-    __enable_irq();
+    portENABLE_INTERRUPTS();
 
     return ret;
 }
