@@ -65,65 +65,65 @@ palStatus_t pal_init(void)
         status = pal_RTOSInitialize(NULL);
         if (PAL_SUCCESS == status)
         {
-            DEBUG_PRINT("Network init\r\n");
-            status = pal_plat_socketsInit(NULL);
-            if (PAL_SUCCESS != status)
-            {
-                DEBUG_PRINT("init of network module has failed with status %" PRIx32 "\r\n",status);
-            }
-            else //socket init succeeded
-            {
-                DEBUG_PRINT("TLS init\r\n");
-                status = pal_initTLSLibrary();
-                if (PAL_SUCCESS != status)
-                {
-                    DEBUG_PRINT("init of tls module has failed with status %" PRIx32 "\r\n",status);
-                }
-                else
-                {
-                    DEBUG_PRINT("Crypto init\r\n");
-                    status = pal_plat_initCrypto();
-                    if (PAL_SUCCESS != status)
-                    {
-                        DEBUG_PRINT("init of crypto module has failed with status %" PRIx32 "\r\n",status);
-                    }
-                    else
-                    {
-                        DEBUG_PRINT("Internal Flash init\r\n");
+//             DEBUG_PRINT("Network init\r\n");
+//             status = pal_plat_socketsInit(NULL);
+//             if (PAL_SUCCESS != status)
+//             {
+//                 DEBUG_PRINT("init of network module has failed with status %" PRIx32 "\r\n",status);
+//             }
+//             else //socket init succeeded
+//             {
+//                 DEBUG_PRINT("TLS init\r\n");
+//                 status = pal_initTLSLibrary();
+//                 if (PAL_SUCCESS != status)
+//                 {
+//                     DEBUG_PRINT("init of tls module has failed with status %" PRIx32 "\r\n",status);
+//                 }
+//                 else
+//                 {
+//                     DEBUG_PRINT("Crypto init\r\n");
+//                     status = pal_plat_initCrypto();
+//                     if (PAL_SUCCESS != status)
+//                     {
+//                         DEBUG_PRINT("init of crypto module has failed with status %" PRIx32 "\r\n",status);
+//                     }
+//                     else
+//                     {
+//                         DEBUG_PRINT("Internal Flash init\r\n");
 
-                        #if PAL_USE_INTERNAL_FLASH
-                            status = pal_internalFlashInit();
-                        #endif
-                        if (PAL_SUCCESS != status)
-                        {
-                            DEBUG_PRINT("init of Internal Flash module has failed with status %" PRIx32 "\r\n",status);
-                        }
+//                         #if PAL_USE_INTERNAL_FLASH
+//                             status = pal_internalFlashInit();
+//                         #endif
+//                         if (PAL_SUCCESS != status)
+//                         {
+//                             DEBUG_PRINT("init of Internal Flash module has failed with status %" PRIx32 "\r\n",status);
+//                         }
 
-                        else
-                        {
-#if !defined  MBED_CONF_MBED_CLOUD_CLIENT_EXTERNAL_SST_SUPPORT && !defined MBED_CONF_MBED_CLOUD_CLIENT_PSA_SUPPORT
-                            sotp_result_e sotpStatus = SOTP_SUCCESS;
-                            DEBUG_PRINT("SOTP init\r\n");
+//                         else
+//                         {
+// #if !defined  MBED_CONF_MBED_CLOUD_CLIENT_EXTERNAL_SST_SUPPORT && !defined MBED_CONF_MBED_CLOUD_CLIENT_PSA_SUPPORT
+//                             sotp_result_e sotpStatus = SOTP_SUCCESS;
+//                             DEBUG_PRINT("SOTP init\r\n");
 
-                            sotpStatus = sotp_init();
-                            if (SOTP_SUCCESS != sotpStatus)
-                            {
-                                DEBUG_PRINT("init of SOTP module has failed with status %" PRIx32 "\r\n", (int32_t)sotpStatus);
-                                status = PAL_ERR_INIT_SOTP_FAILED;
-                            }
-#endif
-                            if (PAL_SUCCESS == status)
-                            {
-                                status = pal_plat_DRBGInit();
-                                if (PAL_SUCCESS != status)
-                                {
-                                    DEBUG_PRINT("init of DRBG module has failed with status %" PRIx32 "\r\n",status);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+//                             sotpStatus = sotp_init();
+//                             if (SOTP_SUCCESS != sotpStatus)
+//                             {
+//                                 DEBUG_PRINT("init of SOTP module has failed with status %" PRIx32 "\r\n", (int32_t)sotpStatus);
+//                                 status = PAL_ERR_INIT_SOTP_FAILED;
+//                             }
+// #endif
+//                             if (PAL_SUCCESS == status)
+//                             {
+//                                 status = pal_plat_DRBGInit();
+//                                 if (PAL_SUCCESS != status)
+//                                 {
+//                                     DEBUG_PRINT("init of DRBG module has failed with status %" PRIx32 "\r\n",status);
+//                                 }
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
         }
         else
         {
